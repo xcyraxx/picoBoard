@@ -12,7 +12,7 @@ tusb_desc_device_t const desc_device = {
     .bMaxPacketSize0 = CFG_TUD_ENDPOINT0_SIZE,
 
     .idVendor = 0xCafe,     // PLACEHOLDER
-    .iProduct = 0x4000,     // PLACEHOLDER       
+    .idProduct = 0x4000,     // PLACEHOLDER       
     .bcdDevice =  0x0100,
 
     .iManufacturer = 0x01,
@@ -62,7 +62,7 @@ int8 const *tud_hid_descriptor_report_cb(int8 instance){
 }
 
 // STRING DESCRIPTOR CALLBACK
-int8 const* tud_descriptor_string_cb(int8 index, int16 langid) {
+int16 const* tud_descriptor_string_cb(int8 index, int16 langid) {
     static int16 _desc_str[32];
     int8 chr_count;
 
