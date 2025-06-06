@@ -10,7 +10,7 @@ int main(void) {
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, GPIO_OUT);
 
-    bool sent = false;
+  //  bool sent = false;
 
     while (1) {
         tud_task();
