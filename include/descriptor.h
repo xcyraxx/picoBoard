@@ -1,5 +1,5 @@
-#ifndef USB_DESCRIPTOR_H
-#define USB_DESCRIPTOR_H
+#ifndef DESCRIPTOR_H
+#define DESCRIPTOR_H
 
 #include<stdint.h>
 #include "tusb.h"
