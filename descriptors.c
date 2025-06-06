@@ -1,58 +1,86 @@
-#include "tusb.h"
+#include "descriptor.h"
 
-#define ITF_NUM_HID 0
-#define CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN)
+tusb_desc_device_t const desc_device = {
+    .bLength = sizeof(tusb_desc_device_t),
+    .bDescriptorType = TUSB_DESC_DEVICE,
+    .bcdUSB = 0x0200,
 
-const uint8_t desc_hid_report[] = {
+    .bDeviceClass = 0x00,
+    .bDeviceSubClass = 0x00,
+    .bDeviceProtocol = 0x00,
+
+    .bMaxPacketSize0 = CFG_TUD_ENDPOINT0_SIZE,
+
+    .idVendor = 0xCafe,     // PLACEHOLDER
+    .iProduct = 0x4000,     // PLACEHOLDER       
+    .bcdDevice =  0x0100,
+
+    .iManufacturer = 0x01,
+    .iProduct = 0x02,
+    .iSerialNumber = 0x03,
+
+    .bNumConfigurations  = 1
+};
+
+int8 const hid_report_descriptor[] = {
     TUD_HID_REPORT_DESC_KEYBOARD()
 };
 
-const uint8_t* tud_hid_descriptor_report_cb(uint8_t instance) {
-    (void)instance;
-    return desc_hid_report;
-}
+#define CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN)
 
-const uint8_t desc_configuration[] = {
-    TUD_CONFIG_DESCRIPTOR(1, 1, 0, CONFIG_TOTAL_LEN, 0, 100),
-    TUD_HID_DESCRIPTOR(ITF_NUM_HID, 0, HID_ITF_PROTOCOL_KEYBOARD, sizeof(desc_hid_report), 0x81, 8, 10)
+int8 const desc_configuration[] = {
+    // CONFIG DESCRIPTOR
+    TUD_CONFIG_DESCRIPTOR(1, 1, 0, CONFIG_TOTAL_LEN, 0x00, 100),
+
+    // INTERFACE DESCRIPTOR
+    TUD_HID_DESCRIPTOR(0, 0, HID_ITF_PROTOCOL_KEYBOARD, sizeof(hid_report_descriptor), 0x81, 8, 10)
 };
 
-const uint8_t* tud_descriptor_configuration_cb(uint8_t index) {
+/*-----------------STRING DESCRIPTOR------------------------------*/
+char const* string_desc_arr[] = {
+    (const char[]){0x09, 0x04},         // 0: language (English) 
+    "KAAN",                             // 1: Manufacturer
+    "DUCKY",                            // 2: Product
+    "69420"                             // 3: Serial Number
+};
+/*----------------------------------------------------------------*/
+
+// DEVICE DESCRIPTOR CALLBACK
+int8 const *tud_descriptor_device_cb(void){
+    return (int8 const*)&desc_device;
+}
+
+// CONFIGURATION DESCRIPTOR CALLBACK
+int8 const *tud_descriptor_configuration_cb(int8 index){
     (void)index;
     return desc_configuration;
 }
 
-const uint8_t desc_device[] = {
-    0x12, 0x01, 0x00, 0x02, 0x00, 0x00, 0x00, 64,
-    0xC0, 0x16, 0xDC, 0x05, 0x00, 0x01, 0x01, 0x02,
-    0x03, 0x01
-};
-
-const uint8_t* tud_descriptor_device_cb(void) {
-    return desc_device;
+int8 const *tud_hid_descriptor_report_cb(int8 instance){
+    (void)instance;
+    return hid_report_descriptor;
 }
 
-const char* string_desc_arr[] = {
-    (const char[]) { 0x09, 0x04 },
-    "RP2040 Manufacturer",
-    "RP2040 HID Keyboard",
-    "123456"
-};
+// STRING DESCRIPTOR CALLBACK
+int8 const* tud_descriptor_string_cb(int8 index, int16 langid) {
+    static int16 _desc_str[32];
+    int8 chr_count;
 
-static uint16_t _desc_str[32];
-
-const uint16_t* tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
     (void)langid;
-    uint8_t chr_count;
 
-    if (index == 0) {
+    if(!index){
         _desc_str[1] = 0x0409;
         chr_count = 1;
-    } else {
+    }
+    else{
+        if(!(index < sizeof(string_desc_arr)/sizeof(string_desc_arr[0]))) return NULL;
+
         const char* str = string_desc_arr[index];
-        chr_count = strlen(str);
-        for (uint8_t i = 0; i < chr_count; i++) {
-            _desc_str[1 + i] = str[i];
+        chr_count = 0;
+
+        while(str[chr_count] && chr_count < 31){
+            _desc_str[1+chr_count] = str[chr_count];
+            chr_count++;
         }
     }
 
