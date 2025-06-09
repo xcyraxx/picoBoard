@@ -46,10 +46,17 @@ static void send_key(report_t *r){
     tud_hid_keyboard_report(0, r->modifier, r->keycode);
 }
 
+//Function to send an entire string instead just a single key, takes report_t type arguemnt
+void send_string(report_t *r){
+    if(!tud_hid_ready()) return;
+    tud_hid_keyboard_report(0, r->modifier, r->keycode);
+}
+
 // Sends release, i.e relase the key after press
 static inline void release_key(){
     tud_hid_keyboard_report(0, 0, NULL);
 }
+
 
 
 // Determines the flow of keyboard tasks

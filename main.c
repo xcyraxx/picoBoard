@@ -4,6 +4,7 @@
 #include "class/hid/hid.h"
 #include "keyboard.h"
 #include "testScript.h"
+#include "pico/multicore.h"
 
 void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, uint8_t report_type, uint8_t const* buffer, uint16_t bufsize) {
     (void)instance;
@@ -27,7 +28,7 @@ int main() {
     board_init();
     tusb_init();
     keyboard_init();
-    testScript();
+    multicore_launch_core1(testScript);
 
     while (1) {
         tud_task();    
