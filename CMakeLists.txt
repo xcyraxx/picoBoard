@@ -27,6 +27,9 @@ add_executable(
     pico_hid_keyboard
     main.c
     descriptors.c
+    keyboard.c
+    ringBuffer.c
+    testScript.c
 )
 
 
