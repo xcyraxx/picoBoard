@@ -1,4 +1,4 @@
-#include "descriptor.h"
+#include "usb_descriptor.h"
 
 tusb_desc_device_t const desc_device = {
     .bLength = sizeof(tusb_desc_device_t),
