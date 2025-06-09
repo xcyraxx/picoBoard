@@ -61,7 +61,7 @@ void keyboard_task(){
     switch(state) {
         case STATE_IDLE:
             if(keyboard_ready()&& !(queue_is_empty(q))){
-                dequeue_report(&_send, q);
+                dequeue_report(q, &_send);
                 send_key(&_send);
                 timestamp = time_us_32();
                 state = STATE_KEY_PRESS;

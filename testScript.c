@@ -38,7 +38,7 @@ void testScript(){
     test[19].keycode[0] = HID_KEY_H;
 
     for(int i = 0; i < 20; i++){
-        enqueue_report(&test[i], q);
+        enqueue_report(q, &test[i]);
     }
 
 }

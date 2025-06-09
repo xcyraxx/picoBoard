@@ -37,8 +37,8 @@ target_include_directories(pico_hid_keyboard PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-pico_enable_stdio_usb(hid_keyboard 0)  # 0 = Enable USB
-pico_enable_stdio_uart(hid_keyboard 0) # 0 = Disable UART (optional)
+pico_enable_stdio_usb(pico_hid_keyboard 0)  # 0 = Enable USB
+pico_enable_stdio_uart(pico_hid_keyboard 0) # 0 = Disable UART (optional)
 
 target_link_libraries(pico_hid_keyboard
     pico_stdlib

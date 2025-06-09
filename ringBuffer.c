@@ -56,7 +56,7 @@ bool queue_is_full(const reportQueue* q){
 }
 
 // Add to queue
-bool enqueue_report(const report_t *report, reportQueue *q){
+bool enqueue_report(reportQueue *q, const report_t *report){
     if(queue_is_full(q)) return false;
 
     if(q->queue_head == -1)
@@ -70,7 +70,7 @@ bool enqueue_report(const report_t *report, reportQueue *q){
 
 
 // Remove from queue
-bool dequeue_report(report_t *out, reportQueue *q){
+bool dequeue_report(reportQueue *q, report_t *out){
     if(queue_is_empty(q)) return false;
 
     *out = q->buffer[q->queue_head];
