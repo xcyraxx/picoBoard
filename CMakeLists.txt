@@ -26,7 +26,7 @@ include_directories(${PICO_SDK_PATH}/lib/tinyusb/src/class/hid)
 add_executable(
     pico_hid_keyboard
     main.c
-    descriptors.c
+    usb_descriptor.c
     keyboard.c
     ringBuffer.c
     testScript.c
