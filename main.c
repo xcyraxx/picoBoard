@@ -1,9 +1,11 @@
 #include "pico/stdlib.h"
-#include "bsp/board.h"
 #include "tusb.h"
+#include "bsp/board.h"
 #include "class/hid/hid.h"
+#include "keyboard.h"
+#include "testScript.h"
 
-void tud_hid_set_report_cb(uint8_t instance,uint8_t report_id, uint8_t report_type, uint8_t const* buffer, uint16_t bufsize) {
+void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, uint8_t report_type, uint8_t const* buffer, uint16_t bufsize) {
     (void)instance;
     (void)report_id;
     (void)report_type;
@@ -12,6 +14,7 @@ void tud_hid_set_report_cb(uint8_t instance,uint8_t report_id, uint8_t report_ty
 }
 
 uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t* buffer, uint16_t reqlen) {
+    // Just return 0 if unused
     (void)instance;
     (void)report_id;
     (void)report_type;
@@ -20,11 +23,16 @@ uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_t
     return 0;
 }
 
-int main(void) {
+int main() {
     board_init();
     tusb_init();
+    keyboard_init();
+    testScript();
 
     while (1) {
-        tud_task();
+        tud_task();    
+        keyboard_task();
     }
+
+    return 0;
 }
