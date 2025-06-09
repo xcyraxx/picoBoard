@@ -32,6 +32,27 @@ add_executable(
     testScript.c
 )
 
+# Get all payload text files
+file(GLOB PAYLOAD_FILES "${CMAKE_CURRENT_SOURCE_DIR}/payloads/*.txt")
+
+# Generate a .c file containing payload strings
+set(GENERATED_PAYLOADS_C "${CMAKE_CURRENT_BINARY_DIR}/generated_payloads.c")
+
+# Custom command to convert .txt files to a C source file
+add_custom_command(
+    OUTPUT ${GENERATED_PAYLOADS_C}
+    COMMAND ${CMAKE_COMMAND} -DPAYLOAD_FILES="${PAYLOAD_FILES}" -DOUT_FILE="${GENERATED_PAYLOADS_C}" -P ${CMAKE_CURRENT_SOURCE_DIR}/generate_payloads.cmake
+    DEPENDS ${PAYLOAD_FILES}
+    COMMENT "Generating payloads..."
+)
+
+# Add the generated source to the build
+add_custom_target(generate_payloads DEPENDS ${GENERATED_PAYLOADS_C})
+add_dependencies(pico_hid_keyboard generate_payloads)
+target_sources(pico_hid_keyboard PRIVATE ${GENERATED_PAYLOADS_C})
+# Include the header
+target_include_directories(pico_hid_keyboard PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
 
 target_include_directories(pico_hid_keyboard PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include

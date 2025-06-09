@@ -1,0 +1,7 @@
+DELAY 300
+GUI r
+DELAY 500
+STRING Notepad.exe
+ENTER
+DELAY 1000
+STRING wassup cuh

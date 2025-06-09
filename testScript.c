@@ -3,15 +3,10 @@
 #include <string.h>
 #include "pico/stdlib.h"
 
+extern const char* payloads[];
+extern const int payload_count;
 
-static const char *script =
-    "GUI r\n"
-    "DELAY 500\n"
-    "STRING Notepad.exe\n"
-    "ENTER\n"
-    "DELAY 1000\n"
-    "STRING wassup cuh\n";
-
+//Create a payload, rebuild project and then compile
 
 void parse_duckyscript(const char *script) {
     if (script == NULL) return;
@@ -249,7 +244,7 @@ void parse_duckyscript(const char *script) {
 
 void testScript(){
     reportQueue *q = get_keyboard_queue();
-    parse_duckyscript(script);
-    // enqueue_report(q, &(report_t){.keycode = {HID_KEY_A}});
+    parse_duckyscript(payloads[0]);
+    parse_duckyscript(payloads[1]);
 }
 
