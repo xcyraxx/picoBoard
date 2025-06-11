@@ -44,7 +44,7 @@ reportQueue *get_keyboard_queue(){
 bool queue_init(){
     keyboardQueue.queue_head= -1;
     keyboardQueue.queue_tail= -1;
-    memset(keyboardQueue.buffer, 0, sizeof(keyboardQueue.buffer));   // set every value tp 0x00
+    memset(keyboardQueue.buffer, 0, sizeof(keyboardQueue.buffer));   // set every value to 0x00
     
     int lockID = spin_lock_claim_unused(true);                       // claiming a free lock
     keyboardQueue.lock = spin_lock_instance(lockID);
