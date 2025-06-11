@@ -1,21 +1,20 @@
-#include "testScript.h"
-#include <stdlib.h>
-#include <string.h>
+#include "ducky_parser.h"
 #include "pico/stdlib.h"
 
-extern const char* payloads[];
-extern const int payload_count;
+
 
 //Create a payload, rebuild project and then compile
 
 void parse_duckyscript(const char *script) {
     if (script == NULL) return;
 
-    char *script_copy = strdup(script);
-    if (!script_copy) return;
+    char *script_copy = strdup(script);                 // Copy the script
+    if (!script_copy) return;               
 
     char *saveptr;
     char *line = strtok_r(script_copy, "\n", &saveptr);
+
+
     while (line != NULL) {
         // Skip leading whitespace
         while (*line == ' ' || *line == '\t') line++;
@@ -30,22 +29,36 @@ void parse_duckyscript(const char *script) {
         if (strncmp(line, "REM", 3) == 0) {
             // Do nothing for comments
         }
+
+        //-------------------------------------------
+        //  Keyword - DELAY
+        //-------------------------------------------
         else if (strncmp(line, "DELAY ", 6) == 0) {
             char *delay_str = line + 6;
             while (*delay_str == ' ' || *delay_str == '\t') delay_str++;
             int ms = atoi(delay_str);
             if (ms > 0) {
-                sleep_ms((uint32_t)ms);
+                reportQueue *q = get_keyboard_queue();
+                report_t r = {0};
+                r.cmd = CMD_DELAY;
+                r.delay_ms = ms;
+                enqueue_report(q, &r);
             }
         }
+
+        //-------------------------------------------
+        //  Keyword - STRING
+        //-------------------------------------------
         else if (strncmp(line, "STRING ", 7) == 0) {
             const char *str = line + 7;
             reportQueue *q = get_keyboard_queue();
             while (*str) {
-                uint8_t keycode = 0;
+                int8 keycode = 0;
+                int8 modifier = 0;
                 switch (*str) {
                     case 'A' ... 'Z':
                         keycode = HID_KEY_A + (*str - 'A');
+                        modifier = MOD_LSHIFT;
                         break;
                     case 'a' ... 'z':
                         keycode = HID_KEY_A + (*str - 'a');
@@ -121,23 +134,30 @@ void parse_duckyscript(const char *script) {
                         break;
                     case '!':
                         keycode = HID_KEY_EXCLAMATION; // Assuming '!' is mapped to 1
+                        modifier = MOD_LSHIFT;
                         break;
                     default:
                         keycode = 0;
                         break;
                 }
                 if (keycode) {
-                    enqueue_report(q, &(report_t){.keycode = {keycode}});
+                    enqueue_report(q, &(report_t){.cmd=CMD_KEY,.data._key.modifier = modifier, .data._key.keycode = {keycode}});
                 }
                 str++;
             }
-        } else if (strncmp(line, "GUI", 3) == 0) {
+        } 
+
+        //-------------------------------------------
+        //  Keyword - GUI
+        //-------------------------------------------        
+        else if (strncmp(line, "GUI", 3) == 0) {
             // WIN KEY
             char *key = line + 3;
             while (*key == ' ' || *key == '\t') key++;
            //check which letter comes after GUI in one line and press
             reportQueue *q = get_keyboard_queue();
-            uint8_t keycode = 0;
+            int8 keycode = 0;
+
             if (*key >= 'A' && *key <= 'Z') {
                 keycode = HID_KEY_A + (*key - 'A');
             } else if (*key >= 'a' && *key <= 'z') {
@@ -146,31 +166,65 @@ void parse_duckyscript(const char *script) {
                 keycode = 0; // Unknown key
             }
             if (keycode) {
-                enqueue_report(q, &(report_t){.modifier = MOD_LGUI, .keycode = {keycode}});
+                report_t r = {0};
+                r.cmd = CMD_KEY;
+                r.data._key.modifier = MOD_LGUI;
+                r.data._key.keycode[0] = keycode;
+                enqueue_report(q, &r);
             }
-        } else if (strncmp(line, "ENTER", 5) == 0) {
+        }
+ 
+        //-------------------------------------------
+        //  Keyword - ENTER
+        //-------------------------------------------         
+        
+        else if (strncmp(line, "ENTER", 5) == 0) {
             // Handle ENTER key
             reportQueue *q = get_keyboard_queue();
-            enqueue_report(q, &(report_t){.keycode = {HID_KEY_ENTER}});
-        } else if (strncmp(line, "ESC", 3) == 0) {
+            enqueue_report(q, &(report_t){.cmd=CMD_KEY, .data._key.keycode = {HID_KEY_ENTER}});
+        } 
+
+        //-------------------------------------------
+        //  Keyword - ESC
+        //-------------------------------------------         
+
+        else if (strncmp(line, "ESC", 3) == 0) {
             // Handle ESC key
             reportQueue *q = get_keyboard_queue();
-            enqueue_report(q, &(report_t){.keycode = {HID_KEY_ESC}});
-        } else if (strncmp(line, "BACKSPACE", 9) == 0) {
+            enqueue_report(q, &(report_t){.cmd=CMD_KEY, .data._key.keycode = {HID_KEY_ESC}});
+        } 
+        
+        //-------------------------------------------
+        //  Keyword - BACKSPACE
+        //-------------------------------------------         
+         
+        else if (strncmp(line, "BACKSPACE", 9) == 0) {
             // Handle BACKSPACE key
             reportQueue *q = get_keyboard_queue();
-            enqueue_report(q, &(report_t){.keycode = {HID_KEY_BACKSPACE}});
-        } else if (strncmp(line, "TAB", 3) == 0) {
+            enqueue_report(q, &(report_t){.cmd=CMD_KEY, .data._key.keycode = {HID_KEY_BACKSPACE}});
+        } 
+
+        //-------------------------------------------
+        //  Keyword - TAB
+        //-------------------------------------------         
+
+        else if (strncmp(line, "TAB", 3) == 0) {
             // Handle TAB key
             reportQueue *q = get_keyboard_queue();
-            enqueue_report(q, &(report_t){.keycode = {HID_KEY_TAB}});
+            enqueue_report(q, &(report_t){.cmd=CMD_KEY, .data._key.keycode = {HID_KEY_TAB}});
         }
+        
+        //-------------------------------------------
+        //  Keyword - CTRL
+        //-------------------------------------------         
+
         else if (strncmp(line, "CTRL", 4) == 0) {
             // Handle CTRL key
             char *key = line + 4;
             while (*key == ' ' || *key == '\t') key++;
+
             reportQueue *q = get_keyboard_queue();
-            uint8_t keycode = 0;
+            int8 keycode = 0;
             if (*key >= 'A' && *key <= 'Z') {
                 keycode = HID_KEY_A + (*key - 'A');
             } else if (*key >= 'a' && *key <= 'z') {
@@ -178,16 +232,28 @@ void parse_duckyscript(const char *script) {
             } else {
                 keycode = 0; // Unknown key
             }
+
             if (keycode) {
-                enqueue_report(q, &(report_t){.modifier = MOD_LCTRL, .keycode = {keycode}});
+                report_t r = {0};
+                r.cmd = CMD_KEY;
+                r.data._key.modifier = MOD_LCTRL;
+                r.data._key.keycode[0] = keycode;
+                enqueue_report(q, &r);
             }
         }
+        
+        //-------------------------------------------
+        //  Keyword - SHIFT
+        //-------------------------------------------         
+
         else if (strncmp(line, "SHIFT", 5) == 0) {
             // Handle SHIFT key
             char *key = line + 5;
             while (*key == ' ' || *key == '\t') key++;
+
             reportQueue *q = get_keyboard_queue();
-            uint8_t keycode = 0;
+            int8 keycode = 0;
+            
             if (*key >= 'A' && *key <= 'Z') {
                 keycode = HID_KEY_A + (*key - 'A');
             } else if (*key >= 'a' && *key <= 'z') {
@@ -195,16 +261,28 @@ void parse_duckyscript(const char *script) {
             } else {
                 keycode = 0; // Unknown key
             }
+            
             if (keycode) {
-                enqueue_report(q, &(report_t){.modifier = MOD_LSHIFT, .keycode = {keycode}});
+                report_t r = {0};
+                r.cmd = CMD_KEY;
+                r.data._key.modifier = MOD_LSHIFT;
+                r.data._key.keycode[0] = keycode;
+                enqueue_report(q, &r);
             }
         }
+
+        //-------------------------------------------
+        //  Keyword - ALT
+        //-------------------------------------------         
+
         else if (strncmp(line, "ALT", 3) == 0) {
             // Handle ALT key
             char *key = line + 3;
             while (*key == ' ' || *key == '\t') key++;
+
             reportQueue *q = get_keyboard_queue();
-            uint8_t keycode = 0;
+            int8 keycode = 0;
+
             if (*key >= 'A' && *key <= 'Z') {
                 keycode = HID_KEY_A + (*key - 'A');
             } else if (*key >= 'a' && *key <= 'z') {
@@ -212,16 +290,28 @@ void parse_duckyscript(const char *script) {
             } else {
                 keycode = 0; // Unknown key
             }
+
             if (keycode) {
-                enqueue_report(q, &(report_t){.modifier = MOD_LALT, .keycode = {keycode}});
+                report_t r = {0};
+                r.cmd = CMD_KEY;
+                r.data._key.modifier = MOD_LALT;
+                r.data._key.keycode[0] = keycode;
+                enqueue_report(q, &r);
             }
         }
+
+        //-------------------------------------------
+        //  Keyword - CTRL-ALT
+        //-------------------------------------------         
+ 
         else if (strncmp(line, "CTRL-ALT", 8) == 0) {
             // Handle CTRL-ALT key combination
             char *key = line + 8;
             while (*key == ' ' || *key == '\t') key++;
+
             reportQueue *q = get_keyboard_queue();
-            uint8_t keycode = 0;
+            int8 keycode = 0;
+
             if (*key >= 'A' && *key <= 'Z') {
                 keycode = HID_KEY_A + (*key - 'A');
             } else if (*key >= 'a' && *key <= 'z') {
@@ -229,10 +319,17 @@ void parse_duckyscript(const char *script) {
             } else {
                 keycode = 0; // Unknown key
             }
+
             if (keycode) {
-                enqueue_report(q, &(report_t){.modifier = MOD_LCTRL | MOD_LALT, .keycode = {keycode}});
+                report_t r = {0};
+                r.cmd = CMD_KEY;
+                r.data._key.modifier = MOD_LCTRL | MOD_LALT ;
+                r.data._key.keycode[0] = keycode;
+                 
+                enqueue_report(q, &r);
             }
         }
+         
         else {
             // placeholder for unrecognized commands
         }
@@ -243,6 +340,8 @@ void parse_duckyscript(const char *script) {
 }
 
 void testScript(){
+    sem_acquire_blocking(&init_comp);       // wait for initialization to complete
+
     reportQueue *q = get_keyboard_queue();
     parse_duckyscript(payloads[0]);
     parse_duckyscript(payloads[1]);

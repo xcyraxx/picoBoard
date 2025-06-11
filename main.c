@@ -3,7 +3,8 @@
 #include "bsp/board.h"
 #include "class/hid/hid.h"
 #include "keyboard.h"
-#include "testScript.h"
+#include "ducky_parser.h"
+#include "shd_sync.h"
 #include "pico/multicore.h"
 
 void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, uint8_t report_type, uint8_t const* buffer, uint16_t bufsize) {
@@ -24,11 +25,16 @@ uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_t
     return 0;
 }
 
+ semaphore_t init_comp;    // semaphore for initialization. core1 task only launches after initialization is complete
+
 int main() {
     board_init();
     tusb_init();
+
+    sem_init(&init_comp, 0, 1);             // Lock start
     keyboard_init();
     multicore_launch_core1(testScript);
+    sem_release(&init_comp);                // Lock release
 
     while (1) {
         tud_task();    
