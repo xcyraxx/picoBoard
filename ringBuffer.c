@@ -5,9 +5,12 @@
         This is done because, no other functions should try and create another instance of the queue.
 
         Every file that implements ringBuffer will be aware of the queue, but will not know how the queue is defined. 
-        
+        Hence giving a layer of abstraction, 
+
         ** Do not call the queue_init() function in any other file apart from the keyboard
         Calling it can cause the queue to re-initialize, potentially losing all the data previously held in it **
+
+        Thread saftey is implemented using spinlocks.
 
     How to use:
         1. When trying to use the queue, first get the instance of the keyboard queue using get_keyboard_queue,
@@ -25,6 +28,7 @@ struct _reportQueue{                          // Queue definiton
     report_t buffer[REPORT_QUEUE_SIZE];      
     sint32 queue_head;
     sint32 queue_tail;
+    spin_lock_t *lock;
 };
 
 // The actual queue
@@ -41,6 +45,9 @@ bool queue_init(){
     keyboardQueue.queue_head= -1;
     keyboardQueue.queue_tail= -1;
     memset(keyboardQueue.buffer, 0, sizeof(keyboardQueue.buffer));   // set every value tp 0x00
+    
+    int lockID = spin_lock_claim_unused(true);                       // claiming a free lock
+    keyboardQueue.lock = spin_lock_instance(lockID);
     return true;
 }
 
@@ -51,36 +58,53 @@ bool queue_is_empty(const reportQueue* q){
 
 // Check if queue is full
 bool queue_is_full(const reportQueue* q){
-    return (q->queue_head == 0 && q->queue_tail == REPORT_QUEUE_SIZE-1) || 
-           ((q->queue_tail + 1) == q->queue_head);
+    return ((q->queue_tail + 1) % REPORT_QUEUE_SIZE) == q->queue_head;
 }
 
 // Add to queue
-bool enqueue_report(reportQueue *q, const report_t *report){
-    if(queue_is_full(q)) return false;
+bool enqueue_report(reportQueue *q, const report_t *report ){
+    bool result = false;
 
-    if(q->queue_head == -1)
-        q->queue_head = 0;
+    int32 irq_status = spin_lock_blocking(q->lock);                 // ENTER C.S
+    
+    if(queue_is_full(q)) 
+        result = false;
+    else{
+        if(q->queue_head == -1)
+             q->queue_head = q->queue_tail = 0;
+        else
+            q->queue_tail= (q->queue_tail + 1) % REPORT_QUEUE_SIZE;
 
-    q->queue_tail= (q->queue_tail + 1) % REPORT_QUEUE_SIZE;
-    q->buffer[q->queue_tail] = *report;
-   
-    return true;
+        q->buffer[q->queue_tail] = *report;
+        result = true;
+    }
+
+    spin_unlock(q->lock, irq_status);                               // EXIT C.S
+    return result;
 }
 
 
 // Remove from queue
 bool dequeue_report(reportQueue *q, report_t *out){
-    if(queue_is_empty(q)) return false;
+    bool result = false;
 
-    *out = q->buffer[q->queue_head];
-   
-    if(q->queue_head == q->queue_tail){
-        q->queue_head = q->queue_tail = -1;
-    }
-    else{
-        q->queue_head = (q->queue_head + 1) % REPORT_QUEUE_SIZE;
-    }
+    int32 irq_status = spin_lock_blocking(q->lock);                   // ENTER C.S
+
+    if(queue_is_empty(q))
+        result = false;
     
-    return true;
+    else{
+        *out = q->buffer[q->queue_head];
+    
+        if(q->queue_head == q->queue_tail){
+            q->queue_head = q->queue_tail = -1;                     // reset the queue
+        }
+        else
+            q->queue_head = (q->queue_head + 1) % REPORT_QUEUE_SIZE;
+        
+        result = true;
+    }
+
+    spin_unlock(q->lock, irq_status);                               // EXIT C.S    
+    return result;
 }
