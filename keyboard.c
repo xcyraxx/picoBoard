@@ -10,11 +10,9 @@
     Functions are performed depending on the current state of the machine.
     State of the machine can be changed from outside the interface, although its not advised to do so.
 
-    The report definition for the keyboard is a bit modified from the standard version. 4 bytes for delay have been added.
-    This delay byte is not required for the tiny_usb function, it is for the state machine. 
-    Do not pass the delay_ms to any tusb functions.
-
-    Since it is using custom delays, pacing is not implemented. Could implement pacing for further optimizations, 
+    The report definition for the keyboard is the standard version. 
+    
+    Pacing is not implemented. Could implement pacing for further optimizations, 
     or if keystrokes are missing.
 
     Functions are provided for direct sending of keys, bypassing the queue. 
@@ -43,20 +41,13 @@ StateType *get_current_state(){
 // Sends report from queue to system via tud_hid_keyboard_report()
 static void send_key(report_t *r){
     if(!tud_hid_ready()) return;
-    tud_hid_keyboard_report(0, r->modifier, r->keycode);
-}
-
-//Function to send an entire string instead just a single key, takes report_t type arguemnt
-void send_string(report_t *r){
-    if(!tud_hid_ready()) return;
-    tud_hid_keyboard_report(0, r->modifier, r->keycode);
+    tud_hid_keyboard_report(0, r->data._key.modifier, r->data._key.keycode);
 }
 
 // Sends release, i.e relase the key after press
 static inline void release_key(){
     tud_hid_keyboard_report(0, 0, NULL);
 }
-
 
 
 // Determines the flow of keyboard tasks
@@ -69,9 +60,18 @@ void keyboard_task(){
         case STATE_IDLE:
             if(keyboard_ready()&& !(queue_is_empty(q))){
                 dequeue_report(q, &_send);
-                send_key(&_send);
                 timestamp = time_us_32();
-                state = STATE_KEY_PRESS;
+
+                switch(_send.cmd){                          // Checks the type of command received
+                    case CMD_KEY:
+                        send_report(&_send);
+                        state = STATE_KEY_PRESS;
+                        break;
+                    
+                    case CMD_DELAY:
+                        state = STATE_KEY_DELAY;
+                        break;
+                }
             }
             break;
         
