@@ -38,7 +38,7 @@ static inline bool keyboard_ready(){
 // This function is for direct sending of reports. Reports dont have to be added to queue.
 // Do not call it in main 
 static inline void send_report(report_t *r){                              
-    tud_hid_keyboard_report((0, r->data._key.modifier, r->data._key.keycode);       
+    tud_hid_keyboard_report(0, r->data._key.modifier, r->data._key.keycode);       
 }    
 
 // To be called only after send_report() 

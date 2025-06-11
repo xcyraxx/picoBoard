@@ -29,7 +29,7 @@ add_executable(
     usb_descriptor.c
     keyboard.c
     ringBuffer.c
-    testScript.c
+    ducky_parser.c
 )
 
 # Get all payload text files
