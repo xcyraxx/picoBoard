@@ -154,11 +154,13 @@ void parse_duckyscript(const char *script) {
             // WIN KEY
             char *key = line + 3;
             while (*key == ' ' || *key == '\t') key++;
-           //check which letter comes after GUI in one line and press
             reportQueue *q = get_keyboard_queue();
             int8 keycode = 0;
 
-            if (*key >= 'A' && *key <= 'Z') {
+            if (*key == '\0' || strcasecmp(key, "ENTER") == 0) {
+                // Support for "GUI" alone or "GUI ENTER"
+                keycode = HID_KEY_ENTER;
+            } else if (*key >= 'A' && *key <= 'Z') {
                 keycode = HID_KEY_A + (*key - 'A');
             } else if (*key >= 'a' && *key <= 'z') {
                 keycode = HID_KEY_A + (*key - 'a');
@@ -329,7 +331,30 @@ void parse_duckyscript(const char *script) {
                 enqueue_report(q, &r);
             }
         }
-         
+        else if (strncmp(line, "CMD KEY", 7) == 0) {
+            // Handle CMD KEY
+            char *key = line + 7;
+            while (*key == ' ' || *key == '\t') key++;
+
+            reportQueue *q = get_keyboard_queue();
+            int8 keycode = 0;
+
+            if (*key >= 'A' && *key <= 'Z') {
+                keycode = HID_KEY_A + (*key - 'A');
+            } else if (*key >= 'a' && *key <= 'z') {
+                keycode = HID_KEY_A + (*key - 'a');
+            } else {
+                keycode = 0; // Unknown key
+            }
+
+            if (keycode) {
+                report_t r = {0};
+                r.cmd = CMD_KEY;
+                r.data._key.modifier = MOD_LGUI;
+                r.data._key.keycode[0] = keycode;
+                enqueue_report(q, &r);
+            }
+        }
         else {
             // placeholder for unrecognized commands
         }
