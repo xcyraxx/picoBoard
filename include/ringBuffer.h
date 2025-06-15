@@ -14,7 +14,7 @@ typedef int32_t sint32;
 
 #define MAX_COUNT 6
 #define MAX_STRING_LEN 64
-#define REPORT_QUEUE_SIZE 128
+#define REPORT_QUEUE_SIZE 600
 
 typedef enum{                                // For identifying the type of command
     CMD_KEY,
