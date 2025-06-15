@@ -58,8 +58,7 @@ void keyboard_task(){
 
     switch(state) {
         case STATE_IDLE:
-            if(keyboard_ready()&& !(queue_is_empty(q))){
-                dequeue_report(q, &_send);
+            if(keyboard_ready()&& dequeue_report(q, &_send)){
                 timestamp = time_us_32();
 
                 switch(_send.cmd){                          // Checks the type of command received
