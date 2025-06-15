@@ -9,7 +9,7 @@
 //-------------------------------------------+
 
 static void p_delay(const char *line){
-    char *delay_str = line + 6;
+    const char *delay_str = line + 6;
     while (*delay_str == ' ' || *delay_str == '\t') delay_str++;
     int ms = atoi(delay_str);
     if (ms > 0) {
@@ -51,7 +51,7 @@ static void p_string(const char *line){
 //-------------------------------------------+  
 
 static void p_gui(const char *line){
-    char *key = line + 3;
+    const char *key = line + 3;
     while (*key == ' ' || *key == '\t') key++;
     //check which letter comes after GUI in one line and press
     reportQueue *q = get_keyboard_queue();
@@ -73,7 +73,7 @@ static void p_gui(const char *line){
 //-------------------------------------------+       
 
 static void p_ctrl(const char *line){
-    char *key = line + 4;
+    const char *key = line + 4;
     while (*key == ' ' || *key == '\t') key++;
 
     reportQueue *q = get_keyboard_queue();
@@ -95,7 +95,7 @@ static void p_ctrl(const char *line){
 //-------------------------------------------+     
 
 static void p_shift(const char *line){
-     char *key = line + 5;
+    const char *key = line + 5;
     while (*key == ' ' || *key == '\t') key++;
 
     reportQueue *q = get_keyboard_queue();
@@ -117,7 +117,7 @@ static void p_shift(const char *line){
 //-------------------------------------------+   
 
 static void p_alt(const char *line){
-    char *key = line + 3;
+    const char *key = line + 3;
     while (*key == ' ' || *key == '\t') key++;
 
     reportQueue *q = get_keyboard_queue();
@@ -139,7 +139,7 @@ static void p_alt(const char *line){
 //-------------------------------------------+  
 
 static void p_ctrl_alt(const char *line){
-    char *key = line + 8;
+    const char *key = line + 8;
     while (*key == ' ' || *key == '\t') key++;
 
     reportQueue *q = get_keyboard_queue();
@@ -155,6 +155,16 @@ static void p_ctrl_alt(const char *line){
             
         enqueue_report(q, &r);
     }
+}
+
+static void p_left_arrow(const char *line){
+    reportQueue *q = get_keyboard_queue();
+    enqueue_report(q, &(report_t){.cmd=CMD_KEY, .data._key.keycode = {HID_KEY_ARROW_LEFT}});
+}
+
+static void p_right_arrow(const char *line){
+    reportQueue *q = get_keyboard_queue();
+    enqueue_report(q, &(report_t){.cmd=CMD_KEY, .data._key.keycode = {HID_KEY_ARROW_RIGHT}});
 }
 
 
@@ -250,8 +260,15 @@ void parse_duckyscript(const char *script) {
         else if (strncmp(line, "CTRL-ALT", 8) == 0) {
             p_ctrl_alt(line);
         }
-         
-        else {
+
+        else if (strncmp(line, "LEFT_ARROW", 10) == 0) {
+            p_left_arrow(line);
+        }
+
+        else if (strncmp(line, "RIGHT_ARROW", 11) == 0) {
+            p_right_arrow(line);
+        }
+        else{
             // placeholder for unrecognized commands
         }
         // Next line
