@@ -6,10 +6,6 @@
 #include<stdbool.h>
 #include "ringBuffer.h"
 
-typedef uint8_t int8;
-typedef uint16_t int16;
-typedef uint32_t int32;
-
 // State definition
 typedef enum{
     STATE_IDLE,
