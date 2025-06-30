@@ -2,11 +2,12 @@
 #include "pico/stdlib.h"
 #include "keymap.h"
 
+
 //Create a payload, rebuild project and then compile
 
-//-------------------------------------------+
-//  Keyword - DELAY
-//-------------------------------------------+
+//------------------------------------------------------------------+
+//                       Keyword - DELAY
+//------------------------------------------------------------------+
 
 static void p_delay(const char *line){
     const char *delay_str = line + 6;
@@ -21,9 +22,9 @@ static void p_delay(const char *line){
     }
 }
 
-//-------------------------------------------+
-//  Keyword - STRING
-//-------------------------------------------+
+//------------------------------------------------------------------+
+//                       Keyword - STRING
+//------------------------------------------------------------------+
 
 static void p_string(const char *line){
     const char *str = line + 7;
@@ -46,9 +47,9 @@ static void p_string(const char *line){
     }
 }
 
-//-------------------------------------------+
-//  Keyword - GUI
-//-------------------------------------------+  
+//------------------------------------------------------------------+
+//                       Keyword - GUI
+//------------------------------------------------------------------+
 
 static void p_gui(const char *line){
     const char *key = line + 3;
@@ -68,105 +69,226 @@ static void p_gui(const char *line){
     }
 }
 
-//-------------------------------------------+
-//  Keyword - CTRL
-//-------------------------------------------+       
+//------------------------------------------------------------------+
+//                        Keyword - CTRL
+//------------------------------------------------------------------+
 
 static void p_ctrl(const char *line){
     const char *key = line + 4;
     while (*key == ' ' || *key == '\t') key++;
+    int8 keycode = 0, i=0, modifier = MOD_LCTRL;
 
-    reportQueue *q = get_keyboard_queue();
-    int8 keycode = 0;
-    
-    keycode = keymap[(int8)*key].keycode;
+ //------------- Tokenize the line ------------------  
+    char *saveptr;
+    char *tokens[5] = {0};
+    char *word = strdup(key);
 
-    if (keycode) {
-        report_t r = {0};
-        r.cmd = CMD_KEY;
-        r.data._key.modifier = MOD_LCTRL;
-        r.data._key.keycode[0] = keycode;
-        enqueue_report(q, &r);
+    char *token = strtok_r(word, " ", &saveptr);
+
+    while(token != NULL && i < 5){
+        tokens[i++] = token;
+        token = strtok_r(NULL, " ", &saveptr);
     }
+ //--------------------------------------------------
+
+    for(int a = 0; tokens[a] != 0; a++){
+     // HANDLE SHIFT
+        if(strcmp(tokens[a], "SHIFT") == 0)
+            modifier |= MOD_LSHIFT;
+     // HANDLE ALT
+        else if(strcmp(tokens[a], "ALT") == 0)
+            modifier |= MOD_LALT;
+     // HANDLE GUI
+        else if(strcmp(tokens[a], "GUI") == 0)
+            modifier |= MOD_LGUI;
+     // HANDLE F1-12
+        else if(tokens[a][0] == 'F'){                                      
+            int32 index = atoi(tokens[a]+1);   
+
+            if(index >= 1 && index <= 12){
+                keycode = f_keys[index];
+                break;
+            }
+        }
+     // HANDLE OTHER KEYS 
+        for(int j = 0; j < (sizeof(keyEntry)/sizeof(keyEntry[0])); j++){
+            if(strcmp(tokens[a], keyEntry[j].keyname) == 0){
+                keycode = keyEntry[j].keycode; 
+                break;
+            }
+        }
+    }
+    
+    reportQueue *q = get_keyboard_queue();
+
+    if (!keycode){
+        if(i == 1 && strlen(key) == 1)
+            keycode = keymap[(int8)*key].keycode;
+       
+        else if(i>1 && strlen(tokens[i-1]) == 1)      // Assuming that the last token is always a single character
+            keycode = keymap[(int8)tokens[i-1][0]].keycode;    
+    }
+    
+    report_t r = {0};
+    r.cmd = CMD_KEY;
+    r.data._key.modifier = modifier;
+    r.data._key.keycode[0] = keycode;
+    enqueue_report(q, &r);
+    free(word);
 }
 
-//-------------------------------------------+
-//  Keyword - SHIFT
-//-------------------------------------------+     
+//------------------------------------------------------------------+
+//                       Keyword - SHIFT
+//------------------------------------------------------------------+
 
 static void p_shift(const char *line){
     const char *key = line + 5;
     while (*key == ' ' || *key == '\t') key++;
+    int8 keycode = 0, i=0, modifier = MOD_LSHIFT;
+
+ //------------- Tokenize the line ------------------  
+    char *saveptr;
+    char *tokens[5] = {0};
+    char *word = strdup(key);
+
+    char *token = strtok_r(word, " ", &saveptr);
+
+    while(token != NULL && i < 5){
+        tokens[i++] = token;
+        token = strtok_r(NULL, " ", &saveptr);
+    }
+ //--------------------------------------------------
+
+    for(int a = 0; tokens[a] != 0; a++){
+     // HANDLE ALT
+        if(strcmp(tokens[a], "ALT") == 0)
+            modifier |= MOD_LALT;
+     // HANDLE GUI
+        else if(strcmp(tokens[a], "GUI") == 0)
+            modifier |= MOD_LGUI;
+     // HANDLE F1-12
+        else if(tokens[a][0] == 'F'){                                      
+            int32 index = atoi(tokens[a]+1);   
+
+            if(index >= 1 && index <= 12){
+                keycode = f_keys[index];
+                break;
+            }
+        }
+     // HANDLE OTHER KEYS
+        for(int j = 0; j < (sizeof(keyEntry)/sizeof(keyEntry[0])); j++){
+            if(strcmp(tokens[a], keyEntry[j].keyname) == 0){
+                keycode = keyEntry[j].keycode; 
+                break;
+            }
+        }
+    }
 
     reportQueue *q = get_keyboard_queue();
-    int8 keycode = 0;
 
-    keycode = keymap[(int8)*key].keycode;
-
-    if (keycode) {
-        report_t r = {0};
-        r.cmd = CMD_KEY;
-        r.data._key.modifier = MOD_LSHIFT;
-        r.data._key.keycode[0] = keycode;
-        enqueue_report(q, &r);
+    if (!keycode){
+        if(i == 1 && strlen(key) == 1)
+            keycode = keymap[(int8)*key].keycode;
+       
+        else if(i>1 && strlen(tokens[i-1]) == 1)      // Assuming that the last token is always a single character
+            keycode = keymap[(int8)tokens[i-1][0]].keycode;     
     }
+    
+    report_t r = {0};
+    r.cmd = CMD_KEY;
+    r.data._key.modifier = modifier;
+    r.data._key.keycode[0] = keycode;
+    enqueue_report(q, &r);
+    free(word);
+
 }
 
-//-------------------------------------------+
-//  Keyword - ALT
-//-------------------------------------------+   
+//------------------------------------------------------------------+
+//                         Keyword - ALT
+//------------------------------------------------------------------+   
 
 static void p_alt(const char *line){
     const char *key = line + 3;
     while (*key == ' ' || *key == '\t') key++;
+    int8 keycode = 0, i=0, modifier = MOD_LALT;
 
-    reportQueue *q = get_keyboard_queue();
-    int8 keycode = 0;
+ //------------- Tokenize the line ------------------  
+    char *saveptr;
+    char *tokens[3] = {0};
+    char *word = strdup(key);
 
-    keycode = keymap[(int8)*key].keycode;
+    char *token = strtok_r(word, " ", &saveptr);
+
+    while(token != NULL && i < 5){
+        tokens[i++] = token;
+        token = strtok_r(NULL, " ", &saveptr);
+    }
+ //--------------------------------------------------
+
+for(int a = 0; tokens[a] != 0; a++){
+    // HANDLE GUI
+        if(strcmp(tokens[a], "GUI") == 0)
+            modifier |= MOD_LGUI;    
+    // HANDLE F1-12
+        else if(tokens[a][0] == 'F'){                                      
+            int32 index = atoi(tokens[a]+1);   
+
+            if(index >= 1 && index <= 12){
+                keycode = f_keys[index];
+                break;
+            }
+        }
     
-    if (keycode) {
-        report_t r = {0};
-        r.cmd = CMD_KEY;
-        r.data._key.modifier = MOD_LALT;
-        r.data._key.keycode[0] = keycode;
-        enqueue_report(q, &r);
+    // HANDLE OTHER KEYS
+        for(int j = 0; j < (sizeof(keyEntry)/sizeof(keyEntry[0])); j++){
+            if(strcmp(tokens[a], keyEntry[j].keyname) == 0){
+                keycode = keyEntry[j].keycode; 
+                break;
+            }
+        }
     }
+
+    reportQueue *q = get_keyboard_queue();
+
+    if (!keycode){
+        if(i == 1 && strlen(key) == 1)
+            keycode = keymap[(int8)*key].keycode;
+       
+        else if(i>1 && strlen(tokens[i-1]) == 1)      // Assuming that the last token is always a single character
+            keycode = keymap[(int8)tokens[i-1][0]].keycode;  
+    }
+    
+    report_t r = {0};
+    r.cmd = CMD_KEY;
+    r.data._key.modifier = modifier;
+    r.data._key.keycode[0] = keycode;
+    enqueue_report(q, &r);
+    free(word);
 }
 
-//-------------------------------------------+
-//  Keyword - CTRL-ALT
-//-------------------------------------------+  
 
-static void p_ctrl_alt(const char *line){
-    const char *key = line + 8;
-    while (*key == ' ' || *key == '\t') key++;
+//------------------------------------------------------------------+
+//                       Keyword - F1-12
+//------------------------------------------------------------------+
+
+static void p_func(const char *line){
+   
+    const char *key = line;
+    while(*key ==  ' ' || *key == '\t' || *key== 'F') key++;
+
+    int32 index = atoi(key);
 
     reportQueue *q = get_keyboard_queue();
     int8 keycode = 0;
 
-    keycode = keymap[(int8)*key].keycode;
-
-    if (keycode) {
+    if(keycode = f_keys[index]) {
         report_t r = {0};
         r.cmd = CMD_KEY;
-        r.data._key.modifier = MOD_LCTRL | MOD_LALT ;
         r.data._key.keycode[0] = keycode;
-            
+        
         enqueue_report(q, &r);
     }
 }
-
-static void p_left_arrow(const char *line){
-    reportQueue *q = get_keyboard_queue();
-    enqueue_report(q, &(report_t){.cmd=CMD_KEY, .data._key.keycode = {HID_KEY_ARROW_LEFT}});
-}
-
-static void p_right_arrow(const char *line){
-    reportQueue *q = get_keyboard_queue();
-    enqueue_report(q, &(report_t){.cmd=CMD_KEY, .data._key.keycode = {HID_KEY_ARROW_RIGHT}});
-}
-
 
 
 void parse_duckyscript(const char *script) {
@@ -256,19 +378,40 @@ void parse_duckyscript(const char *script) {
            p_alt(line);
         }
        
-        // Handle CTRL-ALT key combination
-        else if (strncmp(line, "CTRL-ALT", 8) == 0) {
-            p_ctrl_alt(line);
-        }
+        //-------------------------------------------------------------------------------------------------------
+        //                                            ARROW KEYS
+        //-------------------------------------------------------------------------------------------------------   
 
         else if (strncmp(line, "LEFT_ARROW", 10) == 0) {
-            p_left_arrow(line);
+            reportQueue *q = get_keyboard_queue();
+            enqueue_report(q, &(report_t){.cmd=CMD_KEY, .data._key.keycode = {HID_KEY_ARROW_LEFT}});
         }
 
         else if (strncmp(line, "RIGHT_ARROW", 11) == 0) {
-            p_right_arrow(line);
+            reportQueue *q = get_keyboard_queue();
+            enqueue_report(q, &(report_t){.cmd=CMD_KEY, .data._key.keycode = {HID_KEY_ARROW_RIGHT}});
         }
-        else{
+
+        else if (strncmp(line, "UP_ARROW", 8) == 0){
+            reportQueue *q = get_keyboard_queue();
+            enqueue_report(q, &(report_t){.cmd=CMD_KEY, .data._key.keycode = {HID_KEY_ARROW_UP}});
+        }
+        
+        else if (strncmp(line, "DOWN_ARROW", 10) == 0){
+            reportQueue *q = get_keyboard_queue();
+            enqueue_report(q, &(report_t){.cmd=CMD_KEY, .data._key.keycode = {HID_KEY_ARROW_DOWN}});
+        }
+        
+
+        //-------------------------------------------------------------------------------------------------------
+        //-------------------------------------------------------------------------------------------------------
+
+        // Handle F1-12
+        else if (*line == 'F'){
+            p_func(line);
+        }
+          
+        else {
             // placeholder for unrecognized commands
         }
         // Next line
@@ -282,6 +425,5 @@ void testScript(){
 
     reportQueue *q = get_keyboard_queue();
     parse_duckyscript(payloads[0]);
-    parse_duckyscript(payloads[1]);
 }
 
