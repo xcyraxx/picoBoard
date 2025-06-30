@@ -1,0 +1,69 @@
+REM Testing the ctrl command
+REM open notepad and type stuff (test initialization)
+
+GUI r
+DELAY 500
+STRING notepad
+ENTER
+DELAY 1000
+
+STRING Typing test stuff
+ENTER
+STRING Typing test stuff
+
+CTRL a
+CTRL x
+CTRL z
+
+GUI r
+ENTER
+DELAY 1000
+
+CTRL v
+ENTER
+
+STRING Testing ctrl + esc
+
+CTRL ESC
+DELAY 1000
+CTRL ESC
+ENTER
+
+STRING Testing ctrl + alt + delete
+
+CTRL ALT DELETE
+DELAY 2000
+ESC
+DELAY 500
+ENTER
+
+STRING Remaining test done on chrome, opening chrome
+DELAY 100
+ALT F4
+DELAY 200
+RIGHT_ARROW
+ENTER
+
+GUI r
+DELAY 500
+STRING chrome
+ENTER
+DELAY 1000
+
+CTRL SHIFT T
+DELAY 500
+
+CTRL F
+DELAY 500
+ESC
+
+CTRL TAB
+DELAY 500
+CTRL w
+CTRL SHIFT TAB
+DELAY 500
+CTRL w
+
+
+
+

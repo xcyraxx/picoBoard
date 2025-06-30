@@ -54,11 +54,12 @@ static inline void release_key(){
 void keyboard_task(){
     static report_t _send;
     static int32 timestamp = 0;
+    int32 now = time_us_32();               // used to avoid time drifts
     reportQueue *q = get_keyboard_queue();
 
     switch(state) {
         case STATE_IDLE:
-            if(keyboard_ready()&& dequeue_report(q, &_send)){
+            if(keyboard_ready() && dequeue_report(q, &_send)){
                 timestamp = time_us_32();
 
                 switch(_send.cmd){                          // Checks the type of command received
@@ -75,16 +76,15 @@ void keyboard_task(){
             break;
         
         case STATE_KEY_PRESS:
-            if((time_us_32() - timestamp) >= 20000) {       // time comparision is done in microseconds
+            if((now - timestamp) >= 20000) {       // time comparision is done in microseconds
                 release_key();
                 state = STATE_KEY_RELEASE;
             }
             break;
         
         case STATE_KEY_RELEASE:
-            if((time_us_32() - timestamp) >= 20000){
-                state = STATE_KEY_DELAY;
-                timestamp = time_us_32();                   // reset the timestamp for delay in next state
+            if((now - timestamp) >= 20000){
+                state = STATE_IDLE;
             }
             break;
         

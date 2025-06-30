@@ -8,9 +8,7 @@
         Hence giving a layer of abstraction, 
 
         ** Do not call the queue_init() function in any other file apart from the keyboard
-        Calling it can cause the queue to re-initialize, potentially losing all the data previously held in it **
-
-        Thread saftey is implemented using spinlocks.
+        Calling it can cause the queue to re-initialize, losing all the data previously held in it **
 
     How to use:
         1. When trying to use the queue, first get the instance of the keyboard queue using get_keyboard_queue,
@@ -44,43 +42,74 @@ reportQueue *get_keyboard_queue(){
 bool queue_init(){
     keyboardQueue.queue_head= -1;
     keyboardQueue.queue_tail= -1;
-    memset(keyboardQueue.buffer, 0, sizeof(keyboardQueue.buffer));   // set every value to 0x00
+    memset(keyboardQueue.buffer, 0, sizeof(keyboardQueue.buffer));   // set every value tp 0x00
     
-    int lockID = spin_lock_claim_unused(true);                       // claiming a free lock
+    int lockID = spin_lock_claim_unused(true);                      // claiming a free lock       
+    if(!lockID) return false;
+                    
     keyboardQueue.lock = spin_lock_instance(lockID);
     return true;
 }
 
+//***************************************************************************************************************//
+// These are the thread safe version for the is_empty/full functions. 
+// Use these functions for checking the state outside the critical sections
+
+// ** Potential issue **
+// If there's constant dequeue/enqueue operations begin performed then these functions may not return
+// could face a busy waiting problem, although its unlikely since theres only 2 cores in pico
+// If such issues arises then we might have to implement some sort of MCS or ticket-based locks
+//***************************************************************************************************************//
+
+
+bool queue_isEmpty_safe(){                                                // Safe is_empty()
+    int32 irq_status = spin_lock_blocking(keyboardQueue.lock);    
+    bool result = keyboardQueue.queue_head == -1;
+    spin_unlock(keyboardQueue.lock, irq_status);
+    return result;
+}
+
+bool queue_isFull_safe(){                                               // Safe is_full()
+    int32 irq_status = spin_lock_blocking(keyboardQueue.lock);
+    bool result = ((keyboardQueue.queue_tail +1 ) % REPORT_QUEUE_SIZE) == keyboardQueue.queue_head;
+    spin_unlock(keyboardQueue.lock, irq_status); 
+    return result;
+}
+
+//***************************************************************************************************************//
+//***************************************************************************************************************//
+
+
 // Check if queue is empty
-bool queue_is_empty(const reportQueue* q){
+ static bool queue_is_empty(const reportQueue* q){
     return q->queue_head == -1;
 }
 
 // Check if queue is full
-bool queue_is_full(const reportQueue* q){
+static bool queue_is_full(const reportQueue* q){
     return ((q->queue_tail + 1) % REPORT_QUEUE_SIZE) == q->queue_head;
 }
 
 // Add to queue
 bool enqueue_report(reportQueue *q, const report_t *report ){
-    bool result = false;
+   
+    while(true) {
+        int32 irq_status = spin_lock_blocking(q->lock);                 // ENTER C.S
 
-    int32 irq_status = spin_lock_blocking(q->lock);                 // ENTER C.S
-    
-    if(queue_is_full(q)) 
-        result = false;
-    else{
-        if(q->queue_head == -1)
-             q->queue_head = q->queue_tail = 0;
-        else
-            q->queue_tail= (q->queue_tail + 1) % REPORT_QUEUE_SIZE;
+        if(!(queue_is_full(q))){
+            if(q->queue_head == -1)
+                q->queue_head = q->queue_tail = 0;
+            else
+                q->queue_tail= (q->queue_tail + 1) % REPORT_QUEUE_SIZE;
 
-        q->buffer[q->queue_tail] = *report;
-        result = true;
+            q->buffer[q->queue_tail] = *report;
+            spin_unlock(q->lock, irq_status);
+            return true;
+        }
+
+        spin_unlock(q->lock, irq_status);                               // EXIT C.S
+        tight_loop_contents();
     }
-
-    spin_unlock(q->lock, irq_status);                               // EXIT C.S
-    return result;
 }
 
 

@@ -14,6 +14,28 @@ typedef struct {
     uint8_t modifier;
 } keymap_t; 
 
+typedef struct {
+    const char *keyname;
+    uint8_t keycode;
+} KeyName_t;
+
+static const uint8_t f_keys[] = {0, HID_KEY_F1, HID_KEY_F2, HID_KEY_F3, HID_KEY_F4, HID_KEY_F5, HID_KEY_F6, 
+                                    HID_KEY_F7, HID_KEY_F8, HID_KEY_F9, HID_KEY_F10, HID_KEY_F11, HID_KEY_F12};
+
+
+static const KeyName_t keyEntry[] = {
+    {.keyname = "TAB",         .keycode = HID_KEY_TAB}, 
+    {.keyname = "ENTER",       .keycode = HID_KEY_ENTER},
+    {.keyname = "ESC",         .keycode = HID_KEY_ESCAPE}, 
+    {.keyname = "DELETE",      .keycode = HID_KEY_DELETE},
+    {.keyname = "SPACE",       .keycode = HID_KEY_SPACE},
+    {.keyname = "LEFT_ARROw",  .keycode = HID_KEY_ARROW_LEFT}, 
+    {.keyname = "RIGHT_ARROW", .keycode = HID_KEY_ARROW_RIGHT}, 
+    {.keyname = "HOME",        .keycode = HID_KEY_HOME}, 
+    {.keyname = "END",         .keycode = HID_KEY_END}
+};
+
+  
 static const keymap_t keymap[128]  = {
     [' ']  = {HID_KEY_SPACE, 0}, 
     ['!']  = {HID_KEY_1,  MOD_LSHIFT},
