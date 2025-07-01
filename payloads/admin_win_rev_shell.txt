@@ -6,7 +6,7 @@ DELAY 300
 REM open powershell
 STRING powershell Start-Process powershell -Verb runAs
 ENTER
-DELAY 2500
+DELAY 2800
 LEFT_ARROW
 ENTER
 DELAY 2000

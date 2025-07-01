@@ -38,8 +38,8 @@ typedef struct _reportQueue reportQueue;
 reportQueue *get_keyboard_queue(void);
 
 bool queue_init();
-bool queue_is_empty(const reportQueue* q);
-bool queue_is_full(const reportQueue* q);
+static bool queue_is_empty(const reportQueue* q);
+static bool queue_is_full(const reportQueue* q);
 bool enqueue_report(reportQueue *q, const report_t *report );
 bool dequeue_report(reportQueue *q, report_t *out);
 

@@ -9,7 +9,8 @@
 #include "shd_sync.h"
 
 
-void testScript(void);
+void testScript();
 void parse_duckyscript(const char *script);
+void entry(void);
 
 #endif

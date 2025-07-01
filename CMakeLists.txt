@@ -30,6 +30,8 @@ add_executable(
     keyboard.c
     ringBuffer.c
     ducky_parser.c
+    ssd1306.c
+    ui.c
 )
 
 # Get all payload text files
@@ -66,6 +68,7 @@ target_link_libraries(pico_hid_keyboard
     tinyusb_device
     tinyusb_board
     pico_multicore
+    hardware_i2c
 )
 
 pico_add_extra_outputs(pico_hid_keyboard)

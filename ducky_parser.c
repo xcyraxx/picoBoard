@@ -1,6 +1,7 @@
 #include "ducky_parser.h"
 #include "pico/stdlib.h"
 #include "keymap.h"
+#include "ui.h" 
 
 
 //Create a payload, rebuild project and then compile
@@ -421,9 +422,12 @@ void parse_duckyscript(const char *script) {
 }
 
 void testScript(){
-    sem_acquire_blocking(&init_comp);       // wait for initialization to complete
 
     reportQueue *q = get_keyboard_queue();
-    parse_duckyscript(payloads[0]);
+    parse_duckyscript(payloads[selected]);
 }
 
+void entry(){
+    sem_acquire_blocking(&init_comp);       // wait for initialization to complete
+    testScript();
+}

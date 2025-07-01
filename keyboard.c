@@ -76,20 +76,20 @@ void keyboard_task(){
             break;
         
         case STATE_KEY_PRESS:
-            if((now - timestamp) >= 20000) {       // time comparision is done in microseconds
+            if((now - timestamp) >= 7800) {       // time comparision is done in microseconds
                 release_key();
                 state = STATE_KEY_RELEASE;
             }
             break;
         
         case STATE_KEY_RELEASE:
-            if((now - timestamp) >= 20000){
+            if((now - timestamp) >= 7800){
                 state = STATE_IDLE;
             }
             break;
         
         case STATE_KEY_DELAY:
-            if((time_us_32() - timestamp) >= (_send.delay_ms *1000)){
+            if((time_us_32() - timestamp) >= (_send.delay_ms *1000)){ // convert ms to us
                 state = STATE_IDLE;
             }
             break;
