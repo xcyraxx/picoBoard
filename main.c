@@ -19,7 +19,7 @@
 #define OLED_ADDR 0x3C
 #define BTN_SELECT 8
 
-int selected;
+int selected = 0;
 
 void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, uint8_t report_type, uint8_t const* buffer, uint16_t bufsize) {
     (void)instance;

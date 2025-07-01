@@ -5,7 +5,7 @@
 #define BTN_DOWN   11
 #define BTN_SELECT 8
 
-int selected;
+extern int selected;
 void init_buttons();
 int select_payload_menu(ssd1306_t *oled, const char **items, int count);
 
