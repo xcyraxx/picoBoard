@@ -30,7 +30,7 @@ int8 const hid_report_descriptor[] = {
 
 int8 const desc_configuration[] = {
     // CONFIG DESCRIPTOR
-    TUD_CONFIG_DESCRIPTOR(1, 1, 0, CONFIG_TOTAL_LEN, 0x00, 100),
+    TUD_CONFIG_DESCRIPTOR(1, 1, 0, CONFIG_TOTAL_LEN, 0x80, 100),
 
     // INTERFACE DESCRIPTOR
     TUD_HID_DESCRIPTOR(0, 0, HID_ITF_PROTOCOL_KEYBOARD, sizeof(hid_report_descriptor), 0x81, 8, 10)

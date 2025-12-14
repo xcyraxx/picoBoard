@@ -77,8 +77,11 @@ void keyboard_task(){
         
         case STATE_KEY_PRESS:
             if((now - timestamp) >= 7800) {       // time comparision is done in microseconds
-                release_key();
-                state = STATE_KEY_RELEASE;
+                if(tud_hid_ready()){
+                    release_key();
+                    state = STATE_KEY_RELEASE;
+                    timestamp = now;
+                }
             }
             break;
         

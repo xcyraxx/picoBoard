@@ -40,6 +40,7 @@ uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_t
 }
 
 semaphore_t init_comp;    // semaphore for initialization. core1 task only launches after initialization is complete
+ssd1306_t oled;
 
 
 int main() {
@@ -49,7 +50,6 @@ int main() {
     sem_init(&init_comp, 0, 1);             // Lock start
     keyboard_init();
     multicore_launch_core1(entry);
-    sem_release(&init_comp);                // Lock release
     stdio_init_all();
 
    //Init BUTTON
@@ -57,15 +57,21 @@ int main() {
     // Init I2C
     stdio_init_all();
 
+#ifdef PICO_DEFAULT_LED_PIN
+    gpio_init(PICO_DEFAULT_LED_PIN);
+    gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
+    gpio_put(PICO_DEFAULT_LED_PIN, 1);
+#endif
+
     // I2C Init
-    i2c_init(I2C_PORT, 100 * 1000);  // 100 kHz
+    i2c_init(I2C_PORT, 400 * 1000);  // 400 kHz
     gpio_set_function(SDA_PIN, GPIO_FUNC_I2C);
     gpio_set_function(SCL_PIN, GPIO_FUNC_I2C);
     gpio_pull_up(SDA_PIN);
     gpio_pull_up(SCL_PIN);
 
     // OLED config
-    ssd1306_t oled;
+    
     oled.external_vcc = false;
     if (!ssd1306_init(&oled, 128, 64, OLED_ADDR, I2C_PORT)) {
     printf("OLED init failed!\n");
@@ -75,15 +81,16 @@ int main() {
 
     // After selection, run the payload
     ssd1306_clear(&oled);
-    ssd1306_draw_string(&oled, 0, 0, 2, "Selected!");
-    ssd1306_draw_string(&oled, 0, 32, 1, payload_filenames[selected]);
+    ssd1306_draw_string(&oled, 0, 0, 1, "Selected!");
+    ssd1306_draw_string(&oled, 0, 16, 1, payload_filenames[selected]);
     ssd1306_show(&oled);
     sleep_ms(2000);  // Show selection for a while
     ssd1306_clear(&oled);
-    ssd1306_draw_string(&oled, 0, 0, 2, "Running payload:");
-    ssd1306_draw_string(&oled, 0, 32, 2, payload_filenames[selected]);
+    ssd1306_draw_string(&oled, 0, 0, 1, "Running payload:");
+    ssd1306_draw_string(&oled, 0, 16, 1, payload_filenames[selected]);
     ssd1306_show(&oled);
     
+    sem_release(&init_comp);                // Lock release
 
     while (1) {
         tud_task();    
