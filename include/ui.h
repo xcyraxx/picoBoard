@@ -1,7 +1,6 @@
 #pragma once
 #include "ssd1306.h"
 
-#define BTN_UP     26
 #define BTN_DOWN   19
 #define BTN_SELECT 8
 
