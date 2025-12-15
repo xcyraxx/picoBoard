@@ -18,7 +18,6 @@
 #define SCL_PIN 1
 #define OLED_ADDR 0x3C
 #define BTN_SELECT 8
-
 int selected = 0;
 
 void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, uint8_t report_type, uint8_t const* buffer, uint16_t bufsize) {
@@ -80,6 +79,19 @@ int main() {
     }
 
     while(1) {
+        // Custom Splash Screen
+        for(int i = -128; i < 0; i+=2) {
+            ssd1306_clear(&oled);
+            //ssd1306_draw_square(&oled, i, 0, 128, 64); TEMPORARY
+            ssd1306_draw_string(&oled, 32, 0, 1, "Booting up...");
+            ssd1306_draw_square(&oled, i, 20, 128, 16);
+            //Uncomment after fixing Bitmap 
+            //ssd1306_draw_raw_bitmap(&oled, duck_icon_32x32, 32, 32, 50, 40);
+            ssd1306_show(&oled);
+            ssd1306_clear(&oled);
+        }
+        // Payload Selection
+
         selected = select_payload_menu(&oled, payload_filenames, payload_count);
 
         // After selection, run the payload

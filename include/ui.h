@@ -8,4 +8,4 @@ extern int selected;
 void init_buttons();
 int select_payload_menu(ssd1306_t *oled, const char **items, int count);
 extern ssd1306_t oled;
-
+extern const uint8_t duck_icon_32x32[112];

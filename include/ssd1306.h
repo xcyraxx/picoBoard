@@ -270,6 +270,14 @@ void ssd1306_draw_string_with_font(ssd1306_t *p, uint32_t x, uint32_t y, uint32_
 	@param[in] s : text to draw
 */
 void ssd1306_draw_string(ssd1306_t *p, uint32_t x, uint32_t y, uint32_t scale, const char *s);
+void ssd1306_draw_raw_bitmap(
+    ssd1306_t *p,
+    const uint8_t *data,
+    uint32_t width,
+    uint32_t height,
+    uint32_t x_offset,
+    uint32_t y_offset
+);
 
 int ssd1306_running_text(ssd1306_t *oled, uint8_t y, uint8_t scale, uint8_t speed_ms,
                          const char *msg, int repeat_count, uint button_pin);

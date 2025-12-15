@@ -353,3 +353,23 @@ void ssd1306_show(ssd1306_t *p) {
 
     fancy_write(p->i2c_i, p->address, p->buffer-1, p->bufsize+1, "ssd1306_show");
 }
+void ssd1306_draw_raw_bitmap(
+    ssd1306_t *p,
+    const uint8_t *data,
+    uint32_t width,
+    uint32_t height,
+    uint32_t x_offset,
+    uint32_t y_offset
+) {
+    uint32_t pages = height / 8;
+
+    for (uint32_t page = 0; page < pages; page++) {
+        for (uint32_t x = 0; x < width; x++) {
+            uint32_t index = page * width + x;
+            uint32_t buffer_index =
+                (y_offset / 8 + page) * p->width + (x_offset + x);
+
+            p->buffer[buffer_index] = data[index];
+        }
+    }
+}
