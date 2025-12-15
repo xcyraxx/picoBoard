@@ -39,8 +39,8 @@ int8 const desc_configuration[] = {
 /*-----------------STRING DESCRIPTOR------------------------------*/
 char const* string_desc_arr[] = {
     (const char[]){0x09, 0x04},         // 0: language (English) 
-    "KAAN",                             // 1: Manufacturer
-    "DUCKY",                            // 2: Product
+    "Ultimate",                             // 1: Manufacturer
+    "Picoboard",                            // 2: Product
     "69420"                             // 3: Serial Number
 };
 /*----------------------------------------------------------------*/
