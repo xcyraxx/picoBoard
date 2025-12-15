@@ -5,6 +5,8 @@
 #include "ringBuffer.h"
 #include "tusb.h"
 #include "keyboard.h"
+#include "payloads.h"
+
 
 
 //Create a payload, rebuild project and then compile
@@ -431,27 +433,32 @@ void testScript(){
 }
 
 void entry(){
-    sem_acquire_blocking(&init_comp);       // wait for initialization to complete
-    testScript();
+    while(1) {
+        sem_acquire_blocking(&init_comp);       // wait for initialization to complete
+        testScript();
 
-    // wait for queue to empty and keyboard to be idle
-    while(!queue_isEmpty_safe() || *get_current_state() != STATE_IDLE){
-        sleep_ms(10);
-    }
+        // wait for queue to empty and keyboard to be idle
+        while(!queue_isEmpty_safe() || *get_current_state() != STATE_IDLE){
+            sleep_ms(10);
+        }
 
-    // blink LED twice
-    #ifdef PICO_DEFAULT_LED_PIN
-    for(int i=0; i<2; i++){
-        gpio_put(PICO_DEFAULT_LED_PIN, 0);
-        sleep_ms(200);
+        // blink LED twice
+        #ifdef PICO_DEFAULT_LED_PIN
+        for(int i=0; i<2; i++){
+            gpio_put(PICO_DEFAULT_LED_PIN, 0);
+            sleep_ms(200);
+            gpio_put(PICO_DEFAULT_LED_PIN, 1);
+            sleep_ms(200);
+        }
         gpio_put(PICO_DEFAULT_LED_PIN, 1);
-        sleep_ms(200);
-    }
-    gpio_put(PICO_DEFAULT_LED_PIN, 1);
-    #endif
+        #endif
 
-    ssd1306_clear(&oled);
-    ssd1306_draw_string(&oled, 0, 0, 1, "Completed");
-    ssd1306_show(&oled);
+        ssd1306_clear(&oled);
+        ssd1306_draw_string(&oled, 0, 0, 1, "Completed");
+        ssd1306_show(&oled);
+        
+        sleep_ms(2000);
+        payload_finished = true;
+    }
 }
 

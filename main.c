@@ -39,6 +39,7 @@ uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_t
     return 0;
 }
 
+volatile bool payload_finished = false;
 semaphore_t init_comp;    // semaphore for initialization. core1 task only launches after initialization is complete
 ssd1306_t oled;
 
@@ -74,27 +75,31 @@ int main() {
     
     oled.external_vcc = false;
     if (!ssd1306_init(&oled, 128, 64, OLED_ADDR, I2C_PORT)) {
-    printf("OLED init failed!\n");
-    while (1) sleep_ms(1000);
-}
-    selected = select_payload_menu(&oled, payload_filenames, payload_count);
+        printf("OLED init failed!\n");
+        while (1) sleep_ms(1000);
+    }
 
-    // After selection, run the payload
-    ssd1306_clear(&oled);
-    ssd1306_draw_string(&oled, 0, 0, 1, "Selected!");
-    ssd1306_draw_string(&oled, 0, 16, 1, payload_filenames[selected]);
-    ssd1306_show(&oled);
-    sleep_ms(2000);  // Show selection for a while
-    ssd1306_clear(&oled);
-    ssd1306_draw_string(&oled, 0, 0, 1, "Running payload:");
-    ssd1306_draw_string(&oled, 0, 16, 1, payload_filenames[selected]);
-    ssd1306_show(&oled);
-    
-    sem_release(&init_comp);                // Lock release
+    while(1) {
+        selected = select_payload_menu(&oled, payload_filenames, payload_count);
 
-    while (1) {
-        tud_task();    
-        keyboard_task();
+        // After selection, run the payload
+        ssd1306_clear(&oled);
+        ssd1306_draw_string(&oled, 0, 0, 1, "Selected!");
+        ssd1306_draw_string(&oled, 0, 16, 1, payload_filenames[selected]);
+        ssd1306_show(&oled);
+        sleep_ms(2000);  // Show selection for a while
+        ssd1306_clear(&oled);
+        ssd1306_draw_string(&oled, 0, 0, 1, "Running payload:");
+        ssd1306_draw_string(&oled, 0, 16, 1, payload_filenames[selected]);
+        ssd1306_show(&oled);
+        
+        sem_release(&init_comp);                // Lock release
+        payload_finished = false;
+
+        while (!payload_finished) {
+            tud_task();    
+            keyboard_task();
+        }
     }
 
     return 0;

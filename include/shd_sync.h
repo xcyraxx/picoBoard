@@ -4,5 +4,6 @@
 #include "pico/sync.h"
 
 extern semaphore_t init_comp;
+extern volatile bool payload_finished;
 
 #endif
